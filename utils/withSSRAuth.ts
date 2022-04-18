@@ -1,3 +1,4 @@
+import jwtDecode from "jwt-decode";
 import {
   GetServerSideProps,
   GetServerSidePropsContext,
@@ -5,8 +6,14 @@ import {
 } from "next";
 import { destroyCookie, parseCookies } from "nookies";
 import { AuthTokenerror } from "../errors/AuthTokenError";
+import { validateUserPermissions } from "./validateUserPermissions";
 
 type withSSRAuthOptions = {
+  permissions?: string[];
+  roles?: string[];
+};
+
+type WithSSAuthOptions = {
   permissions?: string[];
   roles?: string[];
 };
@@ -28,6 +35,26 @@ export function withSSRAuth<P>(
           permanent: false,
         },
       };
+    }
+
+    if (options) {
+      const user = jwtDecode<{ permissions: string[]; roles: string[] }>(token);
+
+      const { permissions, roles } = options;
+
+      const userHasValidPermissions = validateUserPermissions({
+        user,
+        permissions,
+        roles,
+      });
+      if (!userHasValidPermissions) {
+        return {
+          redirect: {
+            destination: "/dashboard",
+            permanent: false,
+          },
+        };
+      }
     }
 
     try {

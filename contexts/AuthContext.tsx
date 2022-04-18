@@ -4,6 +4,7 @@ import Router from 'next/router'
 import { destroyCookie, parseCookies, setCookie } from "nookies";
 import { api } from "../services/apiClient";
 
+
 type User = {
   email: string;
   permissions: string[];
@@ -28,9 +29,9 @@ type AuthProviderProps = {
 
 export const AuthContext = createContext({} as AuthContextData)
 
-let authChannel: BroadcastChannel;
+let authChannel: BroadcastChannel
 
-export function signOut() {
+export function signOut () {
   destroyCookie(undefined, 'nextauth.token');
   destroyCookie(undefined, 'nextauth.refreshToken')
 
@@ -39,24 +40,23 @@ export function signOut() {
   Router.push('/')
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider ({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User>();
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    authChannel = new BroadcastChannel('auth');
-
+    authChannel = new BroadcastChannel('auth')
     authChannel.onmessage = (message) => {
-      switch(message.data) {
+      switch (message.data) {
         case 'signOut':
           signOut();
-          authChannel.close();
           break;
 
         default:
           break;
       }
     }
+
   }, [])
 
   useEffect(() => {
@@ -72,13 +72,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
           roles
         })
       })
-      .catch(() => {
-        signOut()
-      })
+        .catch(() => {
+          signOut()
+        })
     }
   }, [])
 
-  async function signIn({ email, password }: SignInCredentials) {
+  async function signIn ({ email, password }: SignInCredentials) {
     try {
       const response = await api.post('sessions', {
         email, password
@@ -105,7 +105,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       })
 
       Router.push('/dashboard')
-    } catch(err) {
+
+    } catch (err) {
       console.log(err)
     }
   }
